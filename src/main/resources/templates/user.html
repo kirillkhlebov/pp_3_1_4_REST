@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользователь</title>
+    <link rel="stylesheet" type="text/css" href="/styles.css">
+
+</head>
+<body>
+<div class="logout-bar">
+    <form th:action="@{/logout}" th:method="POST">
+        <input type="submit" class="logout-button" value="Logout">
+    </form>
+</div>
+<h2>Информация о пользователе</h2>
+
+<div th:object="${user}">
+    <table>
+        <tr>
+            <th>ID:</th>
+            <td><span th:text="${user.getId()}"></span></td>
+        </tr>
+        <tr>
+            <th>Имя:</th>
+            <td><span th:text="${user.firstName}"></span></td>
+        </tr>
+        <tr>
+            <th>Фамилия:</th>
+            <td><span th:text="${user.lastName}"></span></td>
+        </tr>
+        <tr>
+            <th>Возраст:</th>
+            <td><span th:text="${user.age}"></span></td>
+        </tr>
+        <tr>
+            <th>Email:</th>
+            <td><span th:text="${user.email}"></span></td>
+        </tr>
+    </table>
+
+</div>
+
+
+</body>
+</html>
