@@ -2,6 +2,7 @@ package ru.kata.SpirngSecurityApp.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -33,6 +34,7 @@ public class BootstrapPageController {
     }
 
     @PostMapping("/edit/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public String updateUser(@PathVariable Long id, @ModelAttribute("user") User updatedUser) {
         Optional<User> existingUser = userRepository.findById(id);
 
@@ -49,7 +51,8 @@ public class BootstrapPageController {
         return "redirect:/main_page";
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public String deleteUser(@PathVariable Long id) {
         Optional<User> userOptional = userRepository.findById(id);
         userRepository.delete(userOptional.get());
@@ -72,6 +75,7 @@ public class BootstrapPageController {
     }
 
     @PostMapping("/new")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, String>> createUser(@ModelAttribute User user) {
         Map<String, String> response = new HashMap<>();
         Optional<User> existingUser = userRepository.findUserByEmail(user.getEmail());
