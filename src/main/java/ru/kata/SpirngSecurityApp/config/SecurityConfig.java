@@ -14,12 +14,12 @@ import ru.kata.SpirngSecurityApp.service.UserDetailsServiceImpl;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserDetailsServiceImpl userDetailsService;
-    private final LoginSuccessHandler loginSuccessHandler;
+
 
     @Autowired
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService, LoginSuccessHandler loginSuccessHandler) {
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
-        this.loginSuccessHandler = loginSuccessHandler;
+
     }
 
     @Override
@@ -31,8 +31,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().hasAnyRole("USER", "ADMIN")
                 .and()
                 .formLogin().loginPage("/auth/login")
+                .defaultSuccessUrl("/main_page", true)
                 .loginProcessingUrl("/process_login")
-                .successHandler(loginSuccessHandler)
+//                .successHandler(loginSuccessHandler)
                 .failureUrl("/auth/login?error")
                 .and()
                 .logout().logoutUrl("/logout")
