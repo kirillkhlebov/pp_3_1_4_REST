@@ -1,5 +1,7 @@
 package ru.kata.SpirngSecurityApp.models;
 
+import org.springframework.security.core.GrantedAuthority;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -12,7 +14,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "roles")
-public class Role {
+public class Role implements GrantedAuthority {
 
     @Id
     @Column(name = "role_id")
@@ -23,7 +25,7 @@ public class Role {
     private String name;
 
     @Column
-    @ManyToMany(mappedBy = "userRolesList", fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "userRolesList", fetch = FetchType.LAZY)
     private List<User> userList;
 
     public Role() {
@@ -42,7 +44,7 @@ public class Role {
     }
 
     public String getName() {
-        return name;
+        return name.substring(5);
     }
 
     public void setName(String name) {
@@ -55,5 +57,10 @@ public class Role {
 
     public void setUserList(List<User> userSet) {
         this.userList = userList;
+    }
+
+    @Override
+    public String getAuthority() {
+        return name;
     }
 }

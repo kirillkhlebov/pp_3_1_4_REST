@@ -1,25 +1,25 @@
-package ru.kata.SpirngSecurityApp.config;
+package ru.kata.SpirngSecurityApp.configs;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.kata.SpirngSecurityApp.service.UserDetailsServiceImpl;
+import ru.kata.SpirngSecurityApp.services.UserDetailsServiceImpl;
 
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserDetailsServiceImpl userDetailsService;
 
-
     @Autowired
     public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
-
     }
 
     @Override
@@ -31,8 +31,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().hasAnyRole("USER", "ADMIN")
                 .and()
                 .formLogin().loginPage("/auth/login")
-                .defaultSuccessUrl("/main_page", true)
                 .loginProcessingUrl("/process_login")
+                .defaultSuccessUrl("/main_page", true)
                 .failureUrl("/auth/login?error")
                 .and()
                 .logout().logoutUrl("/logout")

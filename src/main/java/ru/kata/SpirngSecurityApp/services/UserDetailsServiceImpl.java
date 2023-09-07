@@ -1,13 +1,13 @@
-package ru.kata.SpirngSecurityApp.service;
+package ru.kata.SpirngSecurityApp.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.kata.SpirngSecurityApp.models.User;
-import ru.kata.SpirngSecurityApp.repo.UserRepository;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import ru.kata.SpirngSecurityApp.security.UserDetailsImpl;
+import ru.kata.SpirngSecurityApp.repositories.UserRepository;
 
 import java.util.Optional;
 
@@ -22,13 +22,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     @Override
+    @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Optional<User> user = userRepository.findUserByEmail(email);
+        Optional<User> optionalUser = userRepository.findUserByEmail(email);
 
-        if (user.isEmpty()) {
+        if (optionalUser.isEmpty()) {
             throw new UsernameNotFoundException("User is not found!");
         }
+        User user = optionalUser.get();
+        user.getUserRolesList().size();
 
-        return new UserDetailsImpl(user.get());
+        return user;
     }
 }

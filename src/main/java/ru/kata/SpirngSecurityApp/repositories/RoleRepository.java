@@ -1,4 +1,4 @@
-package ru.kata.SpirngSecurityApp.repo;
+package ru.kata.SpirngSecurityApp.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

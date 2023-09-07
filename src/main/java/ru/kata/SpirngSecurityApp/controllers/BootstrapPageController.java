@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import ru.kata.SpirngSecurityApp.models.User;
-import ru.kata.SpirngSecurityApp.repo.RoleRepository;
-import ru.kata.SpirngSecurityApp.repo.UserRepository;
-import ru.kata.SpirngSecurityApp.security.UserDetailsImpl;
+import ru.kata.SpirngSecurityApp.services.RoleServiceInt;
+import ru.kata.SpirngSecurityApp.services.UserServiceInt;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,52 +24,50 @@ import java.util.Optional;
 @Controller
 public class BootstrapPageController {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final UserServiceInt userServiceInt;
+    private final RoleServiceInt roleServiceInt;
 
     @Autowired
-    public BootstrapPageController(UserRepository userRepository, RoleRepository roleRepository) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+    public BootstrapPageController(UserServiceInt userServiceInt, RoleServiceInt roleServiceInt) {
+        this.userServiceInt = userServiceInt;
+        this.roleServiceInt = roleServiceInt;
     }
+
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String updateUser(@PathVariable Long id, @ModelAttribute("user") User updatedUser) {
-        Optional<User> existingUser = userRepository.findById(id);
+    @ResponseBody
+    public Map<String, String> updateUser(@PathVariable Long id, @ModelAttribute("user") User updatedUser) {
+        Map<String, String> response = new HashMap<>();
 
-        if (existingUser.isPresent()) {
-            User userToUpdate = existingUser.get();
-            userToUpdate.setFirstName(updatedUser.getFirstName());
-            userToUpdate.setLastName(updatedUser.getLastName());
-            userToUpdate.setAge(updatedUser.getAge());
-            userToUpdate.setEmail(updatedUser.getEmail());
-            userToUpdate.setPassword(updatedUser.getPassword());
-            userToUpdate.setUserRolesList(updatedUser.getUserRolesList());
-            userRepository.save(userToUpdate);
+        if (userServiceInt.isEmailCanNotBeChanged(updatedUser, id)) {
+            response.put("error", "User with this email already exists");
+        } else {
+            userServiceInt.save(updatedUser);
         }
-        return "redirect:/main_page";
+
+        return response;
     }
 
     @PostMapping("/delete/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public String deleteUser(@PathVariable Long id) {
-        Optional<User> userOptional = userRepository.findById(id);
-        userRepository.delete(userOptional.get());
+        Optional<User> userOptional = userServiceInt.findById(id);
+        userServiceInt.delete(userOptional.get());
         return "redirect:/main_page";
     }
 
     @GetMapping("/main_page")
     public String showBootstrapPage(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        model.addAttribute("currentUser", userDetails.getUser());
+        User user = (User) authentication.getPrincipal();
+        model.addAttribute("currentUser", user);
 
-        List<User> listOfUsers = userRepository.findAll();
+        List<User> listOfUsers = userServiceInt.findAll();
         model.addAttribute("users", listOfUsers);
 
         model.addAttribute("user", new User());
-        model.addAttribute("roles", roleRepository.findAll());
+        model.addAttribute("roles", roleServiceInt.findAll());
 
         return "/main_page";
     }
@@ -78,12 +76,11 @@ public class BootstrapPageController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, String>> createUser(@ModelAttribute User user) {
         Map<String, String> response = new HashMap<>();
-        Optional<User> existingUser = userRepository.findUserByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
+        if (userServiceInt.isExist(user.getEmail())) {
             response.put("error", "User with this email already exists");
             return ResponseEntity.badRequest().body(response);
         }
-        userRepository.saveAndFlush(user);
+        userServiceInt.saveAndFlush(user);
         return ResponseEntity.ok(response);
     }
 }
