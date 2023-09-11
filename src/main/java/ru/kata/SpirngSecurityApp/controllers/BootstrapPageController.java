@@ -1,6 +1,7 @@
 package ru.kata.SpirngSecurityApp.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import ru.kata.SpirngSecurityApp.DTO.UserDTO;
+import ru.kata.SpirngSecurityApp.models.Role;
 import ru.kata.SpirngSecurityApp.models.User;
 import ru.kata.SpirngSecurityApp.services.RoleServiceInt;
 import ru.kata.SpirngSecurityApp.services.UserServiceInt;
@@ -20,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 public class BootstrapPageController {
@@ -32,7 +36,6 @@ public class BootstrapPageController {
         this.userServiceInt = userServiceInt;
         this.roleServiceInt = roleServiceInt;
     }
-
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -51,25 +54,65 @@ public class BootstrapPageController {
 
     @PostMapping("/delete/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String deleteUser(@PathVariable Long id) {
-        Optional<User> userOptional = userServiceInt.findById(id);
-        userServiceInt.delete(userOptional.get());
-        return "redirect:/main_page";
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        try {
+            Optional<User> userOptional = userServiceInt.findById(id);
+            if (userOptional.isPresent()) {
+                userServiceInt.delete(userOptional.get());
+                return ResponseEntity.ok("{\"success\": true}");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/main_page")
     public String showBootstrapPage(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-        model.addAttribute("currentUser", user);
-
-        List<User> listOfUsers = userServiceInt.findAll();
-        model.addAttribute("users", listOfUsers);
-
         model.addAttribute("user", new User());
         model.addAttribute("roles", roleServiceInt.findAll());
 
         return "/main_page";
+    }
+
+    @GetMapping("/current_user")
+    @ResponseBody
+    public UserDTO showCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setFirstName(user.getFirstName());
+        userDTO.setLastName(user.getLastName());
+        userDTO.setAge(user.getAge());
+        userDTO.setEmail(user.getEmail());
+
+        List<String> roles = user.getUserRolesList().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+        userDTO.setRoles(roles);
+
+        return userDTO;
+    }
+
+    @GetMapping("/list")
+    @ResponseBody
+    public List<UserDTO> getAllUsers() {
+        List<User> userList = userServiceInt.findAll();
+        List<UserDTO> userDTOList = userList.stream()
+                .map(user -> new UserDTO(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getAge(),
+                        user.getEmail(),
+                        user.getUserRolesList().stream()
+                                .map(Role::getName)
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+        return userDTOList;
     }
 
     @PostMapping("/new")

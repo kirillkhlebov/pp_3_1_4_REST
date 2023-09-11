@@ -82,7 +82,7 @@
                 <!-- Tab panes -->
                 <div class="tab-content">
                     <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                        <table class="table table-striped caption-top w-100">
+                        <table id="userTable" class="table table-striped caption-top w-100">
                             <caption>List of users</caption>
                             <thead>
                             <tr>
@@ -96,42 +96,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <!-- Итерация по списку пользователей и вывод информации -->
-                            <tr th:each="user : ${users}">
-                                <td th:text="${user.id}"></td>
-                                <td th:text="${user.email}"></td>
-                                <td th:text="${user.firstName}"></td>
-                                <td th:text="${user.lastName}"></td>
-                                <td th:text="${user.age}"></td>
-                                <td>
-                                  <span th:each="role, iterStat : ${user.userRolesList}">
-                                    <span th:text="${role.name}"></span>
-                                      <!-- Добавляем запятую, если это не последний элемент -->
-                                    <span th:if="${!iterStat.last}">, </span>
-                                  </span>
-                                </td>
 
-                                <td>
-                                    <a href="#" class="btn btn-primary" data-bs-toggle="modal"
-                                       data-bs-target="#editUserModal"
-                                       th:data-user-id="${user.id}"
-                                       th:data-user-firstname="${user.firstName}"
-                                       th:data-user-lastname="${user.lastName}"
-                                       th:data-user-age="${user.age}"
-                                       th:data-user-email="${user.email}"
-                                       th:data-user-password="${user.password}"
-                                       th:data-user-roles="${user.userRolesList}"
-                                    >Edit</a>
-                                    <a href="#" class="btn btn-danger" data-bs-toggle="modal"
-                                       data-bs-target="#deleteUserModal"
-                                       th:data-user-id="${user.id}"
-                                       th:data-user-firstname="${user.firstName}"
-                                       th:data-user-lastname="${user.lastName}"
-                                       th:data-user-age="${user.age}"
-                                       th:data-user-email="${user.email}"
-                                    >Delete</a>
-                                </td>
-                            </tr>
                             </tbody>
                         </table>
                         <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
@@ -186,7 +151,8 @@
                                             <div id="success-edit-message" class="success-message"
                                                  style="color: green; display: none;">User edited successfully!
                                             </div>
-                                            <div id="error-edit-message" class="error-message" style="color: red;"></div>
+                                            <div id="error-edit-message" class="error-message"
+                                                 style="color: red;"></div>
                                         </form>
                                     </div>
                                     <div class="modal-footer">
@@ -237,7 +203,6 @@
                                                 <label for="deleteRoles" class="form-label">User Roles:</label>
                                                 <select class="form-control" id="deleteRoles" name="deleteRoles"
                                                         multiple disabled>
-                                                    <!-- Опции ролей будут добавлены через JavaScript -->
                                                 </select>
                                             </div>
                                         </form>
@@ -245,7 +210,8 @@
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel
                                         </button>
-                                        <button type="button" class="btn btn-danger" id="deleteUserButton">Delete
+                                        <button type="button" class="btn btn-danger" id="deleteUserButton"
+                                                data-bs-dismiss="modal">Delete
                                         </button>
                                     </div>
                                 </div>
@@ -322,39 +288,31 @@
                 <h2 class="mx-2 my-2">
                     User information page
                 </h2>
-                <div th:object="${currentUser}">
-                    <table class="table table-striped w-100 mx-2 my-2">
-                        <caption>Your personal info</caption>
-                        <thead>
-                        <tr>
-                            <th scope="col">ID</th>
-                            <th scope="col">First name</th>
-                            <th scope="col">Last name</th>
-                            <th scope="col">Age</th>
-                            <th scope="col">Email</th>
-                            <th scope="col">Role</th>
-                        </tr>
-                        </thead>
+                <table class="table table-striped w-100 mx-2 my-2">
+                    <caption>Your personal info</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">First name</th>
+                        <th scope="col">Last name</th>
+                        <th scope="col">Age</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Roles</th>
+                    </tr>
+                    </thead>
 
-                        <tbody>
-                        <tr>
-                            <td><span th:text="${currentUser.id}"></span></td>
-                            <td><span th:text="${currentUser.firstName}"></span></td>
-                            <td><span th:text="${currentUser.lastName}"></span></td>
-                            <td><span th:text="${currentUser.age}"></span></td>
-                            <td><span th:text="${currentUser.email}"></span></td>
-                            <td>
-                              <span th:each="role, iterStat : ${currentUser.userRolesList}">
-                                <span th:text="${role.name}"></span>
-                                  <!-- Добавляем запятую, если это не последний элемент -->
-                                <span th:if="${!iterStat.last}">, </span>
-                              </span>
-                            </td>
-                        </tr>
-                        </tbody>
+                    <tbody>
+                    <tr>
+                        <td id="current_userId"></td>
+                        <td id="current_firstName"></td>
+                        <td id="current_lastName"></td>
+                        <td id="current_age"></td>
+                        <td id="current_email"></td>
+                        <td id="current_roles"></td>
+                    </tr>
+                    </tbody>
 
-                    </table>
-                </div>
+                </table>
             </div>
         </div>
     </div>
@@ -389,6 +347,7 @@
                         errorMessage.style.display = "none";
                         form.reset();
                         successMessage.style.display = "block";
+                        updateTable();
                     }
                 });
         });
@@ -451,6 +410,7 @@
                     } else {
                         errorMessage.style.display = "none";
                         successMessage.style.display = "block";
+                        updateTable();
                     }
                 });
         });
@@ -492,12 +452,149 @@
         });
 
         deleteUserButton.addEventListener("click", function () {
-            deleteUserForm.action = "/delete/" + deleteUserForm.querySelector("#deleteUserId").value;
-            deleteUserForm.submit();
+            const userId = deleteUserForm.querySelector("#deleteUserId").value;
+            const url = `/delete/${userId}`;
+
+            const csrfToken = deleteUserForm.querySelector('input[name="_csrf"]').value;
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateTable();
+                        const bootstrapModal = new bootstrap.Modal(document.getElementById(`deleteUserModal`), {
+                            keyboard: false
+                        });
+                        bootstrapModal.dispose();
+                    } else {
+                        console.error("Failed to delete user.");
+                    }
+                });
         });
     });
 </script>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        $.ajax({
+            url: "/current_user",
+            method: "GET",
+            dataType: "json",
+            success: function (data) {
+                $("#current_userId").text(data.id);
+                $("#current_firstName").text(data.firstName);
+                $("#current_lastName").text(data.lastName);
+                $("#current_age").text(data.age);
+                $("#current_email").text(data.email);
+                $("#current_roles").text(data.roles.join(", "));
+            },
+            error: function () {
+                console.error("Failed to fetch user data.");
+            }
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        $.ajax({
+            url: "/list",
+            method: "GET",
+            dataType: "json",
+            success: function (data) {
+                $("#userTable tbody").empty();
+
+                data.forEach(function (user) {
+                    var roles = user.roles.join(", ");
+                    var row = "<tr>" +
+                        "<td>" + user.id + "</td>" +
+                        "<td>" + user.email + "</td>" +
+                        "<td>" + user.firstName + "</td>" +
+                        "<td>" + user.lastName + "</td>" +
+                        "<td>" + user.age + "</td>" +
+                        "<td>" + roles + "</td>" +
+                        "<td>" +
+                        "<a href='#' class='btn btn-primary edit-user-button' " +
+                        "data-bs-toggle='modal' data-bs-target='#editUserModal' " +
+                        "data-user-id='" + user.id + "' " +
+                        "data-user-firstname='" + user.firstName + "' " +
+                        "data-user-lastname='" + user.lastName + "' " +
+                        "data-user-age='" + user.age + "' " +
+                        "data-user-email='" + user.email + "' " +
+                        "data-user-password='" + user.password + "' " +
+                        "data-user-roles='" + roles + "'>Edit</a> " +
+                        "<a href='#' class='btn btn-danger delete-user-button' " +
+                        "data-bs-toggle='modal' data-bs-target='#deleteUserModal' " +
+                        "data-user-id='" + user.id + "' " +
+                        "data-user-firstname='" + user.firstName + "' " +
+                        "data-user-lastname='" + user.lastName + "' " +
+                        "data-user-age='" + user.age + "' " +
+                        "data-user-email='" + user.email + "'>Delete</a>" +
+                        "</td>" +
+                        "</tr>";
+                    $("#userTable tbody").append(row);
+                });
+            },
+            error: function () {
+                console.error("Failed to fetch user data.");
+            }
+        });
+    });
+</script>
+
+<script>
+    function updateTable() {
+        $.ajax({
+            url: "/list",
+            method: "GET",
+            dataType: "json",
+            success: function (data) {
+                $("#userTable tbody").empty();
+
+                data.forEach(function (user) {
+                    var roles = user.roles.join(", ");
+                    var row = "<tr>" +
+                        "<td>" + user.id + "</td>" +
+                        "<td>" + user.email + "</td>" +
+                        "<td>" + user.firstName + "</td>" +
+                        "<td>" + user.lastName + "</td>" +
+                        "<td>" + user.age + "</td>" +
+                        "<td>" + roles + "</td>" +
+                        "<td>" +
+                        "<a href='#' class='btn btn-primary edit-user-button' " +
+                        "data-bs-toggle='modal' data-bs-target='#editUserModal' " +
+                        "data-user-id='" + user.id + "' " +
+                        "data-user-firstname='" + user.firstName + "' " +
+                        "data-user-lastname='" + user.lastName + "' " +
+                        "data-user-age='" + user.age + "' " +
+                        "data-user-email='" + user.email + "' " +
+                        "data-user-password='" + user.password + "' " +
+                        "data-user-roles='" + roles + "'>Edit</a> " +
+                        "<a href='#' class='btn btn-danger delete-user-button' " +
+                        "data-bs-toggle='modal' data-bs-target='#deleteUserModal' " +
+                        "data-user-id='" + user.id + "' " +
+                        "data-user-firstname='" + user.firstName + "' " +
+                        "data-user-lastname='" + user.lastName + "' " +
+                        "data-user-age='" + user.age + "' " +
+                        "data-user-email='" + user.email + "'>Delete</a>" +
+                        "</td>" +
+                        "</tr>";
+                    $("#userTable tbody").append(row);
+                });
+            },
+            error: function () {
+                console.error("Failed to fetch user data.");
+            }
+        });
+    }
+</script>
 
 </body>
 </html>
