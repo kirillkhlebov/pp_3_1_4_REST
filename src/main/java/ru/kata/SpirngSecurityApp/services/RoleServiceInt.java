@@ -14,4 +14,6 @@ public interface RoleServiceInt {
     boolean isExist(String name);
 
     void save(Role role);
+
+    Optional<Role> findById(long id);
 }

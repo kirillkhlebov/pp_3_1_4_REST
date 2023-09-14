@@ -136,14 +136,15 @@
                                             </div>
                                             <div class="md-3">
                                                 <label for="editPassword" class="form-label">Password:</label>
-                                                <input class="form-control" type="password" id="editPassword"
+                                                <input class="form-control" type="text" id="editPassword"
                                                        name="password" required>
                                             </div>
 
                                             <div class="md-3">
                                                 <label for="editRoles" class="form-label">User Roles:</label>
                                                 <select class="form-control" id="editRoles" name="editRoles" multiple
-                                                        th:field="*{userRolesList}">
+                                                        required>
+                                                    <option disabled selected value=""> -- select an option --</option>
                                                     <option th:each="role : ${roles}" th:value="${role.id}"
                                                             th:text="${role.name}"></option>
                                                 </select>
@@ -226,42 +227,41 @@
                         <div class="container">
                             <div class="row justify-content-center">
                                 <div class="col-md-6">
-                                    <form id="new-user-form" action="/new" method="post" th:object="${user}">
+                                    <form id="new-user-form" action="/users" method="post">
                                         <div class="mb-3">
                                             <label for="firstName" class="form-label">First Name:</label>
                                             <input class="form-control" type="text" id="firstName" name="firstName"
-                                                   th:value="${user.firstName}" required>
+                                                   required>
                                         </div>
 
                                         <div class="md-3">
                                             <label for="lastName" class="form-label">Last Name:</label>
                                             <input class="form-control" type="text" id="lastName" name="lastName"
-                                                   th:value="${user.lastName}" required>
+                                                   required>
                                         </div>
 
                                         <div class="md-3">
 
                                             <label for="age" class="form-label">Age:</label>
-                                            <input class="form-control" type="number" id="age" name="age"
-                                                   th:value="${user.age}" required>
+                                            <input class="form-control" type="number" id="age" name="age" required>
                                         </div>
 
                                         <div class="md-3">
                                             <label for="email" class="form-label">Email:</label>
-                                            <input class="form-control" type="text" id="email" name="email"
-                                                   th:value="${user.email}" required>
+                                            <input class="form-control" type="text" id="email" name="email" required>
                                         </div>
 
                                         <div class="md-3">
                                             <label for="password" class="form-label">Password:</label>
                                             <input class="form-control" type="password" id="password" name="password"
-                                                   th:value="${user.password}" required>
+                                                   required>
                                         </div>
 
                                         <div class="md-3">
                                             <label for="userRoles" class="form-label">User Roles:</label>
                                             <select class="form-control" id="userRoles" name="userRoles" multiple
-                                                    th:field="*{userRolesList}">
+                                                    required>
+                                                <option disabled selected value=""> -- select an option --</option>
                                                 <option th:each="role : ${roles}" th:value="${role.id}"
                                                         th:text="${role.name}"></option>
                                             </select>
@@ -333,9 +333,29 @@
 
             const formData = new FormData(form);
 
+            const selectedRoles = Array.from(formData.getAll("userRoles")).map(roleId => {
+                const roleOption = document.querySelector(`#userRoles option[value="${roleId}"]`);
+                return roleOption.textContent;
+            });
+
+            const userData = {
+                firstName: formData.get("firstName"),
+                lastName: formData.get("lastName"),
+                age: formData.get("age"),
+                email: formData.get("email"),
+                password: formData.get("password"),
+                userRolesList: selectedRoles
+            };
+
+            const csrfToken = formData.get("_csrf");
+
             fetch(form.action, {
                 method: "POST",
-                body: formData
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                body: JSON.stringify(userData)
             })
                 .then(response => response.json())
                 .then(data => {
@@ -390,16 +410,32 @@
                 }
             });
         });
-
         saveEditButton.addEventListener("click", function () {
-            const formData = new FormData(editUserForm);
-
             const userId = userIdInput.value;
-            const url = `/edit/${userId}`;
+            const url = `/users/${userId}`;
+
+            const userRolesSelect = document.querySelector("#editRoles");
+            const selectedRoles = Array.from(userRolesSelect.selectedOptions).map(option => option.textContent);
+
+            const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+            const userData = {
+                userId: userId,
+                firstName: document.querySelector("#editFirstName").value,
+                lastName: document.querySelector("#editLastName").value,
+                age: document.querySelector("#editAge").value,
+                email: document.querySelector("#editEmail").value,
+                password: document.querySelector("#editPassword").value,
+                userRolesList: selectedRoles
+            };
 
             fetch(url, {
-                method: "POST",
-                body: formData
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                body: JSON.stringify(userData)
             })
                 .then(response => response.json())
                 .then(data => {
@@ -453,12 +489,12 @@
 
         deleteUserButton.addEventListener("click", function () {
             const userId = deleteUserForm.querySelector("#deleteUserId").value;
-            const url = `/delete/${userId}`;
+            const url = `/users/${userId}`;
 
             const csrfToken = deleteUserForm.querySelector('input[name="_csrf"]').value;
 
             fetch(url, {
-                method: "POST",
+                method: "DELETE",
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
                 }
@@ -505,7 +541,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         $.ajax({
-            url: "/list",
+            url: "/users",
             method: "GET",
             dataType: "json",
             success: function (data) {
@@ -552,7 +588,7 @@
 <script>
     function updateTable() {
         $.ajax({
-            url: "/list",
+            url: "/users",
             method: "GET",
             dataType: "json",
             success: function (data) {

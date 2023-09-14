@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class RoleService implements RoleServiceInt{
+public class RoleService implements RoleServiceInt {
 
     private final RoleRepository roleRepository;
 
@@ -32,5 +32,10 @@ public class RoleService implements RoleServiceInt{
     @Transactional
     public void save(Role role) {
         roleRepository.save(role);
+    }
+
+    @Override
+    public Optional<Role> findById(long id) {
+        return roleRepository.findById(id);
     }
 }

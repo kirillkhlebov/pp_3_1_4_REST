@@ -1,4 +1,4 @@
-package ru.kata.SpirngSecurityApp.DTO;
+package ru.kata.SpirngSecurityApp.dto;
 
 import java.util.List;
 
@@ -8,17 +8,20 @@ public class UserDTO {
     private String lastName;
     private byte age;
     private String email;
+
+    private String password;
     private List<String> roles;
 
     public UserDTO() {
     }
 
-    public UserDTO(long id, String firstName, String lastName, byte age, String email, List<String> roles) {
+    public UserDTO(long id, String firstName, String lastName, byte age, String email, String password, List<String> roles) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
         this.email = email;
+        this.password = password;
         this.roles = roles;
     }
 
@@ -68,5 +71,13 @@ public class UserDTO {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
